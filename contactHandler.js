@@ -15,27 +15,12 @@ const defaultAllowedOrigins = [
   'http://127.0.0.1:4175',
 ];
 
-const leadFormats = {
-  design: {
-    label: 'Design',
-    heading: 'New Design Lead',
-    accent: '#FF4D00',
-  },
-  'ai-automation': {
-    label: 'AI/Automation',
-    heading: 'New AI & Automation Lead',
-    accent: '#29D3FF',
-  },
-  development: {
-    label: 'Development',
-    heading: 'New Development Lead',
-    accent: '#4F8CFF',
-  },
-  default: {
-    label: 'General',
-    heading: 'New Shared Landing Page Lead',
-    accent: '#4F8CFF',
-  },
+const leadFormat = {
+  label: 'Design',
+  heading: 'New Design Lead',
+  accent: '#FDCF73',
+  ink: '#003467',
+  source: 'The Design Hands',
 };
 
 export const getAllowedOrigins = () => (process.env.ALLOWED_ORIGINS
@@ -61,7 +46,6 @@ export async function processLeadSubmission(body) {
     budget,
     message,
     recaptcha_token,
-    landing_page,
   } = body || {};
 
   const cleanName = user_name?.trim();
@@ -90,7 +74,6 @@ export async function processLeadSubmission(body) {
     };
   }
 
-  const leadFormat = leadFormats[landing_page] || leadFormats.default;
   const transporter = createTransporter();
 
   await transporter.sendMail({
@@ -99,19 +82,75 @@ export async function processLeadSubmission(body) {
     to: process.env.SMTP_TO,
     subject: `New ${leadFormat.label} Lead: ${cleanService || 'General'} from ${cleanName}`,
     html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
-        <h2 style="border-bottom: 2px solid ${leadFormat.accent}; padding-bottom: 10px;">${leadFormat.heading}</h2>
-        <p><strong>Landing Page:</strong> ${leadFormat.label}</p>
-        <p><strong>Name:</strong> ${cleanName}</p>
-        <p><strong>Email:</strong> ${cleanEmail}</p>
-        <p><strong>Phone:</strong> ${cleanPhone}</p>
-        ${cleanService ? `<p><strong>Service Requested:</strong> ${cleanService}</p>` : ''}
-        <p><strong>Target Budget:</strong> ${cleanBudget || 'Not specified'}</p>
-        <h3 style="margin-top: 30px;">Project Details:</h3>
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px;">
-          ${cleanMessage.replace(/\n/g, '<br/>')}
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: ${leadFormat.ink}; background-color: #fffaf0; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 18px 40px rgba(0, 52, 103, 0.12); border: 1px solid rgba(0, 52, 103, 0.12); }
+          .header { background: linear-gradient(135deg, ${leadFormat.accent}, #ffe7a6); padding: 32px 40px; color: ${leadFormat.ink}; text-align: left; border-bottom: 1px solid rgba(0, 52, 103, 0.08); }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; text-transform: uppercase; }
+          .header p { margin: 4px 0 0 0; opacity: 0.9; font-size: 14px; font-weight: 600; }
+          .content { padding: 40px; }
+          .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: ${leadFormat.ink}; margin-bottom: 16px; border-bottom: 1px solid rgba(0, 52, 103, 0.1); padding-bottom: 8px; }
+          .grid { display: table; width: 100%; margin-bottom: 32px; }
+          .grid-row { display: table-row; }
+          .grid-label { display: table-cell; width: 30%; padding: 8px 0; font-weight: 700; color: ${leadFormat.ink}; font-size: 14px; }
+          .grid-value { display: table-cell; padding: 8px 0; color: ${leadFormat.ink}; font-size: 14px; }
+          .message-box { background-color: #fff7df; border-radius: 12px; padding: 24px; border: 1px solid rgba(253, 207, 115, 0.55); font-style: italic; color: ${leadFormat.ink}; }
+          .footer { background-color: #fffaf0; padding: 24px 40px; text-align: center; border-top: 1px solid rgba(0, 52, 103, 0.1); }
+          .footer p { margin: 0; font-size: 12px; color: rgba(0, 52, 103, 0.72); }
+          .badge { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 700; background-color: ${leadFormat.accent}; color: ${leadFormat.ink}; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>${leadFormat.source}</h1>
+            <p>${leadFormat.heading}</p>
+          </div>
+          <div class="content">
+            <div class="section-title">Client Information</div>
+            <div class="grid">
+              <div class="grid-row">
+                <div class="grid-label">Name</div>
+                <div class="grid-value">${cleanName}</div>
+              </div>
+              <div class="grid-row">
+                <div class="grid-label">Email</div>
+                <div class="grid-value"><a href="mailto:${cleanEmail}" style="color: ${leadFormat.ink}; text-decoration: none; font-weight: 600;">${cleanEmail}</a></div>
+              </div>
+              <div class="grid-row">
+                <div class="grid-label">Phone</div>
+                <div class="grid-value"><a href="tel:${cleanPhone}" style="color: inherit; text-decoration: none;">${cleanPhone}</a></div>
+              </div>
+            </div>
+
+            <div class="section-title">Project Details</div>
+            <div class="grid">
+              <div class="grid-row">
+                <div class="grid-label">Service</div>
+                <div class="grid-value"><span class="badge">${cleanService || 'General Inquiry'}</span></div>
+              </div>
+              <div class="grid-row">
+                <div class="grid-label">Budget</div>
+                <div class="grid-value">${cleanBudget || 'Not specified'}</div>
+              </div>
+            </div>
+
+            <div class="section-title">Project Brief</div>
+            <div class="message-box">
+              ${cleanMessage.replace(/\n/g, '<br/>')}
+            </div>
+          </div>
+          <div class="footer">
+            <p>&copy; ${new Date().getFullYear()} ${leadFormat.source}. All rights reserved.</p>
+            <p>Sent from ${leadFormat.label} Landing Page</p>
+          </div>
         </div>
-      </div>
+      </body>
+      </html>
     `,
   });
 
